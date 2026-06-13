@@ -6,20 +6,20 @@ One file per phase. Read top-to-bottom; later phases assume earlier infra.
 
 ## Timeline
 
-| Phase | Name | Outcome | Est. Days |
-|------:|------|---------|----------:|
-| [0](./phase-00-scaffold.md) | Scaffold & infrastructure | Deployable Next.js app with DB, Redis, worker, CI all green | 3 |
-| [1](./phase-01-auth-onboarding.md) | Multi-tenant auth & onboarding | A user can sign up, create an org, invite teammates, land on a dashboard | 4 |
-| [2](./phase-02-ticket-ingestion.md) | Ticket ingestion | Tickets arrive from web form and email inbox | 5 |
-| [3](./phase-03-agent-workspace.md) | Agent workspace | Agents triage, reply, and close tickets end-to-end | 6 |
-| [4](./phase-04-ai-triage.md) | AI triage engine | Every new ticket gets classified, routed, and (optionally) auto-drafted | 5 |
-| [5](./phase-05-ai-self-service.md) | AI self-service widget | Embeddable chat widget that resolves or escalates | 6 |
-| [6](./phase-06-knowledge-base.md) | Knowledge base + RAG loop | KB articles power AI replies; resolved tickets become draft articles | 6 |
-| [7](./phase-07-sla-escalation.md) | SLA & escalation | Workspaces define SLAs; breaches alert and escalate | 4 |
-| [8](./phase-08-analytics.md) | Analytics & reporting | Admins see volume, deflection, AHT, CSAT, agent perf | 4 |
-| [9](./phase-09-billing.md) | Billing & subscriptions | Stripe plans + metered AI usage + customer portal | 5 |
-| [10](./phase-10-integrations.md) | Integrations layer | Webhooks, Slack, Jira, public REST API | 6 |
-| | **Total** | **MVP → scalable product** | **~54 days** |
+| Phase | Name | Outcome | Est. Days | Status |
+|------:|------|---------|----------:|--------|
+| [0](./phase-00-scaffold.md) | Scaffold & infrastructure | Deployable Next.js app with DB, Redis, worker, CI all green | 3 | ✅ Done |
+| [1](./phase-01-auth-onboarding.md) | Multi-tenant auth & onboarding | A user can sign up, create an org, invite teammates, land on a dashboard | 4 | ✅ Backend done |
+| [2](./phase-02-ticket-ingestion.md) | Ticket ingestion | Tickets arrive from web form and email inbox | 5 | ⏳ Next |
+| [3](./phase-03-agent-workspace.md) | Agent workspace | Agents triage, reply, and close tickets end-to-end | 6 | |
+| [4](./phase-04-ai-triage.md) | AI triage engine | Every new ticket gets classified, routed, and (optionally) auto-drafted | 5 | |
+| [5](./phase-05-ai-self-service.md) | AI self-service widget | Embeddable chat widget that resolves or escalates | 6 | |
+| [6](./phase-06-knowledge-base.md) | Knowledge base + RAG loop | KB articles power AI replies; resolved tickets become draft articles | 6 | |
+| [7](./phase-07-sla-escalation.md) | SLA & escalation | Workspaces define SLAs; breaches alert and escalate | 4 | |
+| [8](./phase-08-analytics.md) | Analytics & reporting | Admins see volume, deflection, AHT, CSAT, agent perf | 4 | |
+| [9](./phase-09-billing.md) | Billing & subscriptions | Stripe plans + metered AI usage + customer portal | 5 | |
+| [10](./phase-10-integrations.md) | Integrations layer | Webhooks, Slack, Jira, public REST API | 6 | |
+| | **Total** | **MVP → scalable product** | **~54 days** | |
 
 **Critical-path notes:**
 - Phases 0–4 form the **shippable MVP** (~23 days). Sell from this.

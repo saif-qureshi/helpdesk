@@ -2,22 +2,160 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+/*
+ * Design tokens — all colors are CSS variables (HSL channels, consumed via
+ * `hsl(var(--token))` in tailwind.config.ts). To re-theme the product, change
+ * the values here in one place; components reference semantic tokens
+ * (primary / ai / success / …), never raw hex.
+ */
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --radius: 0.625rem;
+
+    /* Neutral chrome */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 244 76% 59%;
+
+    /* Brand (primary) — indigo */
+    --primary: 244 76% 59%;
+    --primary-foreground: 0 0% 100%;
+    --primary-muted: 226 100% 97%;
+    --primary-muted-foreground: 245 58% 51%;
+    --primary-border: 226 96% 89%;
+
+    /* AI accent — violet (used on everything AI-generated) */
+    --ai: 258 90% 66%;
+    --ai-foreground: 0 0% 100%;
+    --ai-muted: 255 100% 98%;
+    --ai-muted-foreground: 263 70% 50%;
+    --ai-border: 252 96% 92%;
+
+    /* Status — success / warning / danger */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --success-muted: 152 81% 96%;
+    --success-muted-foreground: 158 75% 28%;
+    --success-border: 152 76% 80%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-muted: 48 100% 96%;
+    --warning-muted-foreground: 26 90% 37%;
+    --warning-border: 48 96% 77%;
+
+    --danger: 0 84% 60%;
+    --danger-foreground: 0 0% 100%;
+    --danger-muted: 0 86% 97%;
+    --danger-muted-foreground: 0 70% 45%;
+    --danger-border: 0 96% 89%;
+  }
+
+  .dark {
+    --background: 222 47% 7%;
+    --foreground: 210 40% 96%;
+    --card: 222 44% 10%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 44% 10%;
+    --popover-foreground: 210 40% 96%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 96%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 96%;
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 244 76% 66%;
+
+    --primary: 244 76% 66%;
+    --primary-foreground: 0 0% 100%;
+    --primary-muted: 244 47% 18%;
+    --primary-muted-foreground: 226 96% 85%;
+    --primary-border: 244 40% 30%;
+
+    --ai: 258 90% 70%;
+    --ai-foreground: 0 0% 100%;
+    --ai-muted: 263 45% 18%;
+    --ai-muted-foreground: 252 96% 88%;
+    --ai-border: 263 40% 32%;
+
+    --success: 160 70% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-muted: 158 50% 14%;
+    --success-muted-foreground: 152 76% 80%;
+    --success-border: 158 45% 26%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 222 47% 11%;
+    --warning-muted: 30 50% 16%;
+    --warning-muted-foreground: 48 96% 80%;
+    --warning-border: 30 45% 28%;
+
+    --danger: 0 75% 60%;
+    --danger-foreground: 0 0% 100%;
+    --danger-muted: 0 50% 18%;
+    --danger-muted-foreground: 0 96% 87%;
+    --danger-border: 0 45% 30%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  /* Tighten display headings for a more intentional, premium rhythm. */
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
+  }
+  ::selection {
+    background-color: hsl(var(--primary) / 0.18);
+  }
+  /* Quieter, theme-aware scrollbars. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.25);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.4);
+  }
 }
 
 @layer utilities {

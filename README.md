@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Helpdesk SaaS
 
-## Getting Started
+AI-driven, multi-tenant helpdesk. Backend on Next.js 14 (App Router) + Prisma 7 +
+PostgreSQL/pgvector + Redis/BullMQ + Claude. Build is phased — see
+[`docs/phases/`](./docs/phases/).
 
-First, run the development server:
+> Frontend/UI is owned separately. This repo currently contains the backend:
+> API route handlers, Prisma schema, queue workers, and supporting services.
+
+## Architecture
+
+Layered, dependency-inverted (SOLID):
+
+| Layer | Path | Responsibility |
+|-------|------|----------------|
+| Core | `lib/core/` | Domain types, interfaces (ports), error hierarchy. No external deps. |
+| Infra | `lib/infra/` | Concrete singletons: Prisma client, Redis, BullMQ queue factory. |
+| Providers | `lib/providers/` | Adapters for external services behind core interfaces *(added in later phases)*. |
+| Repositories | `lib/repositories/` | Data access wrapping Prisma *(added in later phases)*. |
+| Services | `lib/services/`, `lib/health/` | Business logic; depends on interfaces, injected via constructor. |
+| Composition root | `lib/container.ts` | Wires concrete implementations to services. |
+| Worker | `workers/` | BullMQ worker bootstrap + processors. |
+
+Route handlers and worker processors stay thin: parse input → call a service →
+format output.
+
+## Prerequisites
+
+- Node 20+, pnpm 10+
+- PostgreSQL with the `vector` extension (`CREATE EXTENSION vector;`)
+- Redis
+
+## Quickstart
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env        # then fill in DATABASE_URL, REDIS_URL, …
+pnpm check:env              # validate env vars
+pnpm db:generate            # generate the Prisma client
+pnpm db:push                # apply schema to your database
+pnpm dev                    # Next.js app  (http://localhost:3000)
+pnpm worker                 # BullMQ worker (separate terminal)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Verify the stack is wired up:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+curl http://localhost:3000/api/health
+# {"status":"ok","checks":{"db":{...},"redis":{...},"worker":{...}}}
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`worker` reports `error` until `pnpm worker` is running and has written its first
+heartbeat.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Script | Purpose |
+|--------|---------|
+| `pnpm dev` | Run the Next.js app |
+| `pnpm worker` | Run the BullMQ worker |
+| `pnpm build` | `prisma generate` + `next build` |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm test` | Run Vitest once |
+| `pnpm lint` | ESLint via `next lint` |
+| `pnpm db:generate` / `db:push` / `db:migrate` | Prisma client / schema sync / migrations |
+| `pnpm check:env` | Validate environment variables |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **App** → Vercel. Build command `prisma generate && next build`.
+- **Worker** → Railway service, start command `pnpm worker`, healthcheck `/healthz`.
+- **Postgres + Redis** → Railway.

@@ -1,5 +1,7 @@
 # Phase 0 — Project scaffold & infrastructure
 
+> **Status: ✅ Completed** — backend scaffold, infra libs, worker, health endpoint, CI, and tests built and locally verified (typecheck, lint, test, build all green). Live `/api/health` 200, `prisma migrate` on Railway, and Vercel/Railway deploys still pending real infra. Note: stack uses **Prisma 7** (driver adapter; tenancy guard in Phase 1 must use a `$extends` client extension, not `$use` middleware).
+
 ## Goal
 A `pnpm dev` runs a Next.js app that talks to Postgres, Redis, and a BullMQ worker; the same stack is deployed to Vercel + Railway with CI green.
 

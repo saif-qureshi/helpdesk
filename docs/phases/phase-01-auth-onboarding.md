@@ -1,5 +1,7 @@
 # Phase 1 — Multi-tenant auth & organisation onboarding
 
+> **Status: ✅ Backend done** — Prisma models, `$extends` tenancy guard, Clerk middleware + auth helpers, repositories, Clerk org-directory provider, onboarding + org-sync services, and `/api/onboarding` + `/api/webhooks/clerk` routes built; typecheck/lint/26 tests/build all green. **UI** (sign-in, onboarding form, team settings) is owned separately. **Gaps:** route-level integration tests need Clerk/svix mocking (service + webhook-dispatch logic is unit-tested); custom Clerk roles (`org:agent`, `org:viewer`) must be configured in the Clerk dashboard; live verification needs a real DB + Clerk app.
+
 ## Goal
 A new user signs up via Clerk, is forced through an onboarding flow that creates an `Organisation`, can invite teammates with roles, and lands on an empty dashboard scoped to their org.
 

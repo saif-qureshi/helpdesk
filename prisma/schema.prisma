@@ -1,0 +1,87 @@
+// Helpdesk SaaS — Prisma schema
+// Models are added phase by phase (see docs/phases/). Phase 0 only enables
+// the pgvector extension so later phases can store embeddings.
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  // pgvector not installed on the local dev Postgres yet. Re-enable for Phase 6
+  // (KbChunk embeddings) once the `vector` extension is available:
+  //   extensions = [vector]
+}
+
+// ── Phase 1: tenancy ────────────────────────────────────────────────────────
+
+/// A workspace / tenant. Owned entirely by us (Clerk handles only auth). Root of
+/// the tenant tree — scoped by its own id, so NOT in TENANT_SCOPED_MODELS.
+model Organisation {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  logoUrl         String?  @map("logo_url")
+  industry        String?
+  teamSize        String?  @map("team_size")
+  defaultLanguage String?  @map("default_language")
+  timezone        String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  members     Member[]
+  invitations Invitation[]
+
+  @@map("organisations")
+}
+
+/// Membership of a Clerk user in an organisation. Tenant-scoped via organisationId.
+model Member {
+  id             String   @id @default(cuid())
+  clerkUserId    String   @map("clerk_user_id")
+  organisationId String   @map("organisation_id")
+  role           Role
+  email          String
+  name           String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@unique([clerkUserId, organisationId])
+  @@index([organisationId])
+  @@map("members")
+}
+
+/// Pending invite to join an organisation. Tenant-scoped via organisationId.
+model Invitation {
+  id             String           @id @default(cuid())
+  organisationId String           @map("organisation_id")
+  email          String
+  role           Role
+  token          String           @unique
+  status         InvitationStatus @default(PENDING)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@unique([organisationId, email])
+  @@index([organisationId])
+  @@map("invitations")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  AGENT
+  VIEWER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
