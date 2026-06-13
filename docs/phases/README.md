@@ -1,6 +1,8 @@
-# AI Helpdesk SaaS — Phased Build Plan
+# resolv.ai — Phased Build Plan
 
-Implementation-grade plan for a solo founder shipping an AI-driven, multi-tenant helpdesk on Next.js 14 + Prisma + Postgres/pgvector + BullMQ + Clerk + Stripe + Claude.
+AI-native unified inbox for D2C brands. Leads with WhatsApp Cloud API (direct with Meta), expanding to Instagram / Messenger / email / web chat / SMS / Telegram through a single `IChannelProvider` abstraction. Built on Next.js 14 + Prisma 7 + Postgres + BullMQ + Claude.
+
+Strategic positioning (Phase 1.5 onward): not a generic helpdesk, not a generic unified inbox. The wedge is **AI auto-resolves WhatsApp customer questions from store data** (Shopify first) — orders, returns, products, addresses. Wati/Respond.io give brands an inbox to type replies into; we answer for them.
 
 One file per phase. Read top-to-bottom; later phases assume earlier infra.
 
@@ -9,8 +11,9 @@ One file per phase. Read top-to-bottom; later phases assume earlier infra.
 | Phase | Name | Outcome | Est. Days | Status |
 |------:|------|---------|----------:|--------|
 | [0](./phase-00-scaffold.md) | Scaffold & infrastructure | Deployable Next.js app with DB, Redis, worker, CI all green | 3 | ✅ Done |
-| [1](./phase-01-auth-onboarding.md) | Multi-tenant auth & onboarding | A user can sign up, create an org, invite teammates, land on a dashboard | 4 | ✅ Backend done |
-| [2](./phase-02-ticket-ingestion.md) | Ticket ingestion | Tickets arrive from web form and email inbox | 5 | ⏳ Next |
+| [1](./phase-01-auth-onboarding.md) | Multi-tenant auth & onboarding | A user can sign up, create an org, invite teammates, land on a dashboard | 4 | ✅ Done |
+| 1.5 | Custom auth (drop Clerk) | Email/password + Google OAuth, opaque DB sessions, 24h sliding window | 3 | ✅ Done |
+| [2](./phase-02-channels-ingestion.md) | Channels & conversation ingestion | WhatsApp + web chat + email landing in a unified inbox via `IChannelProvider` | 12 | ⏳ Next |
 | [3](./phase-03-agent-workspace.md) | Agent workspace | Agents triage, reply, and close tickets end-to-end | 6 | |
 | [4](./phase-04-ai-triage.md) | AI triage engine | Every new ticket gets classified, routed, and (optionally) auto-drafted | 5 | |
 | [5](./phase-05-ai-self-service.md) | AI self-service widget | Embeddable chat widget that resolves or escalates | 6 | |
@@ -32,18 +35,20 @@ One file per phase. Read top-to-bottom; later phases assume earlier infra.
 ```
 helpdesk/
 ├── app/
-│   ├── (auth)/                  # Clerk sign-in/up
+│   ├── (auth)/                  # sign-in / sign-up / forgot / reset
 │   ├── (marketing)/             # Public landing, /widget loader
 │   ├── (dashboard)/             # Authed agent UI
-│   ├── api/                     # Next.js route handlers
+│   ├── api/                     # Next.js route handlers (incl. /api/auth/*)
 │   └── layout.tsx
 ├── lib/
-│   ├── db.ts                    # Prisma client singleton
-│   ├── redis.ts                 # ioredis singleton
-│   ├── queue.ts                 # BullMQ queue factories
-│   ├── ai/                      # Claude client + prompts
-│   ├── auth/                    # Clerk helpers, tenant guard
-│   └── rag/                     # Embeddings + pgvector retrieval
+│   ├── infra/                   # Prisma client, Redis, queue, tenancy guard
+│   ├── auth/                    # session cookies, getCurrentUser, tenant ctx
+│   ├── core/                    # interfaces (repositories, channels, auth)
+│   ├── repositories/            # Prisma-backed implementations
+│   ├── services/                # business logic (auth, onboarding, conversation)
+│   ├── providers/channels/      # IChannelProvider implementations (Phase 2)
+│   ├── ai/                      # Claude client + prompts (Phase 4)
+│   └── rag/                     # Embeddings + pgvector retrieval (Phase 6)
 ├── workers/
 │   ├── index.ts                 # BullMQ worker entrypoint (Railway)
 │   └── processors/
@@ -56,7 +61,7 @@ helpdesk/
 
 ## Cross-cutting requirements (ongoing — not a phase)
 
-- **Tenancy guard**: keep the Prisma middleware from Phase 1 as the immune system. Every new model with `organisationId` must be added to its allowlist. CI fails if a new model lacks an `organisationId` field without an explicit `@@map("global_*")` opt-out.
+- **Tenancy guard**: Prisma `$extends` client extension from Phase 0 is the immune system. `TENANT_SCOPED_MODELS` is auto-generated from the schema by `scripts/gen-tenant-models.ts` — every new model with `organisationId` is picked up automatically. `SCOPE_KEYS = ["organisationId", "userId"]`.
 - **Rate limits**: every public-facing route (`/api/widget/*`, `/api/webhooks/*` from untrusted senders, `/{orgSlug}/contact`, `/api/v1/*`) uses `@upstash/ratelimit` with sensible defaults — never ship a public route without one.
 - **Streaming**: any user-facing AI response uses `streamText` via the Vercel AI SDK. Background AI (triage, classification, suggestions) does not stream.
 - **Vector RAG**: never call the reply drafter or widget AI without first calling `retrieveContext()` once Phase 6 lands. Audited via a wrapper `draftWithRag()` in `lib/ai/`.
