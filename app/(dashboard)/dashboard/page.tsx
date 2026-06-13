@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 import { CHANNELS } from "@/lib/conversation-data";
 import { CHANNEL_GLYPH } from "@/components/icons/channels";
 import { AiSparkle } from "@/components/shared/ai-sparkle";
-import { PageHeader } from "@/components/shared/page-header";
 import {
   ACTION_ITEMS,
   CHANNEL_PERF,
@@ -60,18 +59,25 @@ function frt(sec: number): string {
 export default function DashboardPage() {
   return (
     <div className="h-full overflow-y-auto bg-slate-50">
-      <PageHeader
-        title="Dashboard"
-        subtitle="Your AI inbox at a glance — where it's winning, where it needs help."
-        action={<RangeTabs />}
-      />
+      <div className="flex items-center justify-between px-6 pb-3 pt-5">
+        <div>
+          <h1 className="text-[18px] font-semibold text-slate-900">
+            Dashboard
+          </h1>
+          <p className="text-[12px] text-slate-500">
+            Your AI inbox at a glance — where it&rsquo;s winning, where it
+            needs help.
+          </p>
+        </div>
+        <RangeTabs />
+      </div>
 
-      <div className="mx-auto max-w-[1180px] space-y-5 px-8 py-6">
+      <div className="space-y-4 px-6 pb-8">
         <PreviewBanner />
 
         <DeflectionCard />
 
-        <div className="grid grid-cols-[1.4fr_1fr] gap-5">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
           <EscalationsCard />
           <ResponseCard />
         </div>
@@ -80,7 +86,7 @@ export default function DashboardPage() {
 
         <ChannelTableCard />
 
-        <div className="grid grid-cols-[1fr_1fr] gap-5">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr]">
           <EconomicsCard />
           <ActionItemsCard />
         </div>
