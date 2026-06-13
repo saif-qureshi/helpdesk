@@ -3,4 +3,4 @@
 // Lists every model declaring an `organisationId` field; the tenancy guard in
 // lib/infra/tenancy.ts consumes this so the set can never drift from the schema.
 
-export const TENANT_SCOPED_MODELS: ReadonlySet<string> = new Set(["Invitation","Member"]);
+export const TENANT_SCOPED_MODELS: ReadonlySet<string> = new Set(["Channel","ChannelEvent","Contact","Conversation","Integration","Invitation","Member","Message","MessageAttachment","MessageTemplate"]);

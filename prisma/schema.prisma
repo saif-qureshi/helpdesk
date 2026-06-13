@@ -70,8 +70,16 @@ model Organisation {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  members     Member[]
-  invitations Invitation[]
+  members            Member[]
+  invitations        Invitation[]
+  channels           Channel[]
+  contacts           Contact[]
+  conversations      Conversation[]
+  messages           Message[]
+  messageAttachments MessageAttachment[]
+  messageTemplates   MessageTemplate[]
+  integrations       Integration[]
+  channelEvents      ChannelEvent[]
 
   @@map("organisations")
 }
@@ -86,8 +94,10 @@ model Member {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  user                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organisation          Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  assignedConversations Conversation[]
+  authoredMessages      Message[]
 
   @@unique([userId, organisationId])
   @@index([organisationId])
@@ -122,4 +132,278 @@ enum InvitationStatus {
   PENDING
   ACCEPTED
   REVOKED
+}
+
+model Channel {
+  id             String        @id @default(cuid())
+  organisationId String        @map("organisation_id")
+  organisation   Organisation  @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  kind           ChannelKind
+  displayName    String        @map("display_name")
+  externalId     String        @map("external_id")
+  status         ChannelStatus @default(CONNECTING)
+  credentials    Json
+  config         Json          @default("{}")
+  lastError      String?       @map("last_error")
+  connectedAt    DateTime?     @map("connected_at")
+
+  conversations Conversation[]
+  templates     MessageTemplate[]
+  events        ChannelEvent[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@unique([organisationId, kind, externalId])
+  @@index([organisationId])
+  @@map("channels")
+}
+
+enum ChannelKind {
+  WHATSAPP
+  INSTAGRAM
+  MESSENGER
+  EMAIL
+  WEB_CHAT
+  SMS
+  TELEGRAM
+}
+
+enum ChannelStatus {
+  CONNECTING
+  ACTIVE
+  ERROR
+  DISCONNECTED
+}
+
+model Contact {
+  id                 String       @id @default(cuid())
+  organisationId     String       @map("organisation_id")
+  organisation       Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  name               String?
+  email              String?
+  phone              String?
+  externalIdentifier String       @map("external_identifier")
+  attributes         Json         @default("{}")
+  shopifyCustomerId  String?      @map("shopify_customer_id")
+
+  conversations Conversation[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@unique([organisationId, externalIdentifier])
+  @@index([organisationId])
+  @@map("contacts")
+}
+
+model Conversation {
+  id             String             @id @default(cuid())
+  organisationId String             @map("organisation_id")
+  organisation   Organisation       @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  contactId      String             @map("contact_id")
+  contact        Contact            @relation(fields: [contactId], references: [id])
+  channelId      String             @map("channel_id")
+  channel        Channel            @relation(fields: [channelId], references: [id])
+  status         ConversationStatus @default(OPEN)
+  subject        String?
+  assigneeId     String?            @map("assignee_id")
+  assignee       Member?            @relation(fields: [assigneeId], references: [id])
+
+  aiSummary  String?    @map("ai_summary")
+  aiUrgency  AiUrgency? @map("ai_urgency")
+  aiCategory String?    @map("ai_category")
+
+  lastMessageAt DateTime  @map("last_message_at")
+  resolvedAt    DateTime? @map("resolved_at")
+
+  messages Message[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@index([organisationId, status])
+  @@index([organisationId, assigneeId])
+  @@index([organisationId, lastMessageAt])
+  @@map("conversations")
+}
+
+enum ConversationStatus {
+  OPEN
+  AI_HANDLING
+  WAITING_AGENT
+  ASSIGNED
+  RESOLVED
+  ARCHIVED
+}
+
+enum AiUrgency {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Message {
+  id               String                @id @default(cuid())
+  organisationId   String                @map("organisation_id")
+  organisation     Organisation          @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  conversationId   String                @map("conversation_id")
+  conversation     Conversation          @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction        MessageDirection
+  author           MessageAuthor
+  authorMemberId   String?               @map("author_member_id")
+  authorMember     Member?               @relation(fields: [authorMemberId], references: [id])
+  body             String
+  richContent      Json?                 @map("rich_content")
+  channelMessageId String?               @map("channel_message_id")
+  replyToMessageId String?               @map("reply_to_message_id")
+  deliveryStatus   MessageDeliveryStatus @default(QUEUED) @map("delivery_status")
+  failureReason    String?               @map("failure_reason")
+
+  attachments MessageAttachment[]
+
+  sentAt      DateTime  @default(now()) @map("sent_at")
+  deliveredAt DateTime? @map("delivered_at")
+  readAt      DateTime? @map("read_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@unique([organisationId, channelMessageId])
+  @@index([conversationId, sentAt])
+  @@map("messages")
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageAuthor {
+  CONTACT
+  AI
+  AGENT
+  SYSTEM
+}
+
+enum MessageDeliveryStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+model MessageAttachment {
+  id             String         @id @default(cuid())
+  organisationId String         @map("organisation_id")
+  organisation   Organisation   @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  messageId      String         @map("message_id")
+  message        Message        @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  kind           AttachmentKind
+  url            String
+  mimeType       String?        @map("mime_type")
+  fileName       String?        @map("file_name")
+  sizeBytes      Int?           @map("size_bytes")
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+enum AttachmentKind {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+  LOCATION
+  STICKER
+}
+
+model MessageTemplate {
+  id                 String                  @id @default(cuid())
+  organisationId     String                  @map("organisation_id")
+  organisation       Organisation            @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  channelId          String                  @map("channel_id")
+  channel            Channel                 @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  name               String
+  language           String
+  category           MessageTemplateCategory
+  bodyTemplate       String                  @map("body_template")
+  variables          Json
+  status             MessageTemplateStatus   @default(DRAFT)
+  externalTemplateId String?                 @map("external_template_id")
+  rejectionReason    String?                 @map("rejection_reason")
+  approvedAt         DateTime?               @map("approved_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@unique([channelId, name, language])
+  @@map("message_templates")
+}
+
+enum MessageTemplateCategory {
+  UTILITY
+  MARKETING
+  AUTHENTICATION
+}
+
+enum MessageTemplateStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Integration {
+  id             String            @id @default(cuid())
+  organisationId String            @map("organisation_id")
+  organisation   Organisation      @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  kind           IntegrationKind
+  status         IntegrationStatus @default(ACTIVE)
+  credentials    Json
+  config         Json              @default("{}")
+  lastError      String?           @map("last_error")
+  connectedAt    DateTime?         @map("connected_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@unique([organisationId, kind])
+  @@map("integrations")
+}
+
+enum IntegrationKind {
+  SHOPIFY
+  WOOCOMMERCE
+  STRIPE
+}
+
+enum IntegrationStatus {
+  ACTIVE
+  ERROR
+  DISCONNECTED
+}
+
+model ChannelEvent {
+  id             String           @id @default(cuid())
+  organisationId String           @map("organisation_id")
+  organisation   Organisation     @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  channelId      String           @map("channel_id")
+  channel        Channel          @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  kind           ChannelEventKind
+  payload        Json
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  @@index([channelId, createdAt])
+  @@map("channel_events")
+}
+
+enum ChannelEventKind {
+  MESSAGE_DELIVERED
+  MESSAGE_READ
+  MESSAGE_FAILED
+  TEMPLATE_APPROVED
+  TEMPLATE_REJECTED
+  CHANNEL_ERROR
 }

@@ -25,6 +25,8 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
 
+  AUTH_ENCRYPTION_KEY: z.string().min(1).optional(),
+
   // Worker liveness key shared between worker (writer) and health check (reader)
   WORKER_HEARTBEAT_KEY: z.string().min(1).default("helpdesk:worker:heartbeat"),
 
