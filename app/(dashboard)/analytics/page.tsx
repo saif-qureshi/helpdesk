@@ -1,192 +1,132 @@
-"use client";
-
-import { useState } from "react";
-import { BookOpen, Download, Eye, Flame, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  ANALYTICS_KPIS,
-  SLA_BREACHES,
-  TOP_ARTICLES,
-  agentById,
-} from "@/lib/dummy-data";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { AgentAvatar } from "@/components/shared/agent-avatar";
-import { PriorityDot } from "@/components/shared/priority-dot";
-import { KpiCard } from "@/components/analytics/kpi-card";
-import { VolumeChart } from "@/components/analytics/volume-chart";
-import { CategoryChart } from "@/components/analytics/category-chart";
-import { AgentTable } from "@/components/analytics/agent-table";
+import { CHANNELS, type ChannelId } from "@/lib/conversation-data";
+import { CHANNEL_GLYPH } from "@/components/icons/channels";
+import { AiSparkle } from "@/components/shared/ai-sparkle";
+import { PageHeader } from "@/components/shared/page-header";
+import { MiniBars } from "@/components/analytics/mini-bars";
 
-const RANGES = [
-  { id: "7d", label: "7 days" },
-  { id: "30d", label: "30 days" },
-  { id: "90d", label: "90 days" },
+const KPIS: {
+  label: string;
+  value: string;
+  delta: string;
+  sub: string;
+  ai?: boolean;
+}[] = [
+  { label: "AI resolution rate", value: "71%", delta: "+6pt", ai: true, sub: "resolved with no human" },
+  { label: "Conversations", value: "3,418", delta: "+12%", sub: "last 30 days" },
+  { label: "Median first response", value: "38s", delta: "−2m 40s", sub: "AI answers instantly" },
+  { label: "CSAT", value: "4.7", delta: "+0.1", sub: "out of 5 · 612 ratings" },
 ];
 
-export default function AnalyticsPage() {
-  const [range, setRange] = useState("30d");
+const CHANNEL_MIX: { id: ChannelId; pct: number }[] = [
+  { id: "whatsapp", pct: 68 },
+  { id: "instagram", pct: 14 },
+  { id: "web", pct: 10 },
+  { id: "messenger", pct: 5 },
+  { id: "email", pct: 3 },
+];
 
+const DAYS = [62, 71, 58, 74, 80, 69, 77, 85, 79, 88, 92, 84, 90, 96];
+const AI_SHARE = [44, 52, 41, 55, 60, 49, 58, 64, 58, 67, 71, 63, 69, 73];
+
+export default function AnalyticsPage() {
   return (
-    <div>
-      <header className="flex items-center justify-between border-b border-border bg-card px-8 py-5">
-        <div>
-          <div className="mb-1 text-xs text-muted-foreground">Reports</div>
-          <h1 className="text-[22px] font-semibold text-foreground">Analytics</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center rounded-md bg-muted p-0.5">
-            {RANGES.map((r) => (
-              <button
-                key={r.id}
-                onClick={() => setRange(r.id)}
+    <div className="h-full overflow-y-auto bg-slate-50">
+      <PageHeader
+        title="Analytics"
+        subtitle="How much your AI is handling — and where humans step in."
+      />
+      <div className="mx-auto max-w-[1040px] space-y-5 px-8 py-7">
+        <div className="grid grid-cols-4 gap-4">
+          {KPIS.map((k) => (
+            <div
+              key={k.label}
+              className={cn(
+                "rounded-xl border border-slate-200 bg-white p-4",
+                k.ai && "border-violet-200 bg-violet-50/30",
+              )}
+            >
+              <div
                 className={cn(
-                  "h-7 rounded px-3 text-xs font-medium",
-                  range === r.id
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                  "text-[11.5px] font-medium",
+                  k.ai
+                    ? "inline-flex items-center gap-1 text-violet-700"
+                    : "text-slate-500",
                 )}
               >
-                {r.label}
-              </button>
-            ))}
-          </div>
-          <Button variant="secondary" size="sm" icon={Download}>
-            Export
-          </Button>
-        </div>
-      </header>
-
-      <div className="space-y-6 p-8">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {ANALYTICS_KPIS.map((kpi) => (
-            <KpiCard key={kpi.label} {...kpi} />
+                {k.ai ? <AiSparkle size={11} /> : null}
+                {k.label}
+              </div>
+              <div className="mt-1 text-[26px] font-semibold tracking-tight text-slate-900">
+                {k.value}
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-[11.5px] font-medium text-emerald-700">
+                  {k.delta}
+                </span>
+                <span className="text-[11px] text-slate-400">{k.sub}</span>
+              </div>
+            </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">
-          <Card className="p-5">
+        <div className="grid grid-cols-[1.6fr_1fr] gap-4">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  Ticket volume over time
+                <h3 className="text-[14px] font-semibold text-slate-900">
+                  Conversations &amp; AI share
                 </h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Total vs. AI-resolved · last 30 days
+                <p className="mt-0.5 text-[12px] text-slate-500">
+                  Daily volume vs. % handled fully by AI
                 </p>
               </div>
-              <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-3 text-[12px]">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-sm bg-primary" /> Total
+                  <span className="h-2.5 w-2.5 rounded-sm bg-slate-300" /> Total
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-sm bg-ai" /> AI-resolved
+                  <span className="h-2.5 w-2.5 rounded-sm bg-violet-500" />
+                  AI-resolved
                 </span>
               </div>
             </div>
-            <VolumeChart />
-          </Card>
-
-          <Card className="p-5">
-            <div className="mb-4">
-              <h3 className="text-sm font-semibold text-foreground">
-                Tickets by category
-              </h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Auto-classified by AI
-              </p>
-            </div>
-            <CategoryChart />
-          </Card>
-        </div>
-
-        <Card className="overflow-hidden p-0">
-          <div className="flex items-center justify-between border-b border-border p-5">
-            <div>
-              <h3 className="text-sm font-semibold text-foreground">
-                Agent performance
-              </h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Last 30 days · 8 agents
-              </p>
-            </div>
+            <MiniBars total={DAYS} ai={AI_SHARE} />
           </div>
-          <AgentTable />
-        </Card>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Card className="p-5">
-            <div className="mb-4">
-              <h3 className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <BookOpen size={14} className="text-ai" /> Top knowledge base
-                articles
-              </h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Used most by AI in replies
-              </p>
-            </div>
-            <ul className="space-y-1">
-              {TOP_ARTICLES.map((a, i) => (
-                <li
-                  key={a.title}
-                  className="flex items-center gap-3 rounded px-2 py-2 hover:bg-muted/40"
-                >
-                  <span className="w-5 font-mono text-xs text-muted-foreground/60">
-                    {i + 1}
-                  </span>
-                  <span className="flex-1 truncate text-[13px] text-foreground/90">
-                    {a.title}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <Eye size={11} /> {a.views.toLocaleString()}
-                  </span>
-                  <Badge tone="ai" icon={Sparkles}>
-                    {a.aiUses}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          </Card>
-
-          <Card className="p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h3 className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                  <Flame size={14} className="text-danger" /> Recent SLA breaches
-                </h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Action required
-                </p>
-              </div>
-              <button className="text-xs font-medium text-primary-muted-foreground hover:opacity-80">
-                View all →
-              </button>
-            </div>
-            <ul className="space-y-1">
-              {SLA_BREACHES.map((b) => {
-                const agent = agentById(b.agentId);
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <h3 className="mb-4 text-[14px] font-semibold text-slate-900">
+              Channel mix
+            </h3>
+            <div className="space-y-3">
+              {CHANNEL_MIX.map((c) => {
+                const ch = CHANNELS[c.id];
+                const Glyph = CHANNEL_GLYPH[c.id];
                 return (
-                  <li
-                    key={b.ticketId}
-                    className="flex cursor-pointer items-center gap-3 rounded px-2 py-2 hover:bg-muted/40"
-                  >
-                    <span className="w-12 font-mono text-xs text-muted-foreground">
-                      #{b.ticketId}
+                  <div key={c.id} className="flex items-center gap-3">
+                    <span
+                      className="inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-white"
+                      style={{ background: ch.color }}
+                    >
+                      <Glyph size={12} />
                     </span>
-                    <PriorityDot priority={b.priority} />
-                    <span className="flex-1 truncate text-[13px] text-foreground/90">
-                      {b.customerLabel}
+                    <span className="w-20 text-[12.5px] text-slate-700">
+                      {ch.label}
                     </span>
-                    <AgentAvatar person={agent} size={20} />
-                    <span className="w-10 text-right text-[11px] font-medium text-danger-muted-foreground">
-                      {b.over}
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${c.pct}%`, background: ch.color }}
+                      />
+                    </div>
+                    <span className="w-9 text-right text-[12px] font-medium text-slate-600">
+                      {c.pct}%
                     </span>
-                  </li>
+                  </div>
                 );
               })}
-            </ul>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
