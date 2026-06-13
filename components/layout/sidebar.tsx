@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3,
   BookOpen,
+  LayoutDashboard,
   LayoutTemplate,
   type LucideIcon,
   MessageSquare,
@@ -27,10 +27,10 @@ const waitingCount = CONVERSATIONS.filter(
 ).length;
 
 const NAV: NavLink[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/conversations", label: "Conversations", icon: MessageSquare, badge: waitingCount },
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "/templates", label: "Templates", icon: LayoutTemplate },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/knowledge", label: "Knowledge base", icon: BookOpen },
 ];
 
