@@ -1,6 +1,5 @@
 import { Users } from "lucide-react";
 import { Role } from "@/generated/prisma/enums";
-import { isClerkConfigured } from "@/lib/auth/clerk-config";
 import { requireOrg } from "@/lib/auth/tenant";
 import { hasAtLeast } from "@/lib/auth/roles";
 import { invitationRepository, memberRepository } from "@/lib/container";
@@ -9,10 +8,6 @@ import { SettingsHeader } from "@/components/settings/page-header";
 import { TeamView } from "./team-view";
 
 export default async function TeamPage() {
-  if (!isClerkConfigured) {
-    return <NotReady note="Authentication isn't configured yet." />;
-  }
-
   let ctx;
   try {
     ctx = await requireOrg();

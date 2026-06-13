@@ -26,12 +26,12 @@ describe("InvitationService.accept", () => {
 
     const res = await service.accept({
       token: "tok-1",
-      clerkUserId: "user_9",
+      userId: "user_9",
       email: "a@acme.com",
     });
 
     expect(res.organisationId).toBe("org_1");
-    expect(await members.findByClerkUser("user_9", "org_1")).toMatchObject({
+    expect(await members.findByUser("user_9", "org_1")).toMatchObject({
       role: Role.AGENT,
     });
     expect((await invitations.findByToken("tok-1"))?.status).toBe("ACCEPTED");
@@ -40,7 +40,7 @@ describe("InvitationService.accept", () => {
   it("rejects an unknown token", async () => {
     const { service } = setup();
     await expect(
-      service.accept({ token: "nope", clerkUserId: "u", email: "e@e.com" }),
+      service.accept({ token: "nope", userId: "u", email: "e@e.com" }),
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 
@@ -52,10 +52,10 @@ describe("InvitationService.accept", () => {
       role: Role.AGENT,
       token: "tok-2",
     });
-    await service.accept({ token: "tok-2", clerkUserId: "u1", email: "a@acme.com" });
+    await service.accept({ token: "tok-2", userId: "u1", email: "a@acme.com" });
 
     await expect(
-      service.accept({ token: "tok-2", clerkUserId: "u2", email: "a@acme.com" }),
+      service.accept({ token: "tok-2", userId: "u2", email: "a@acme.com" }),
     ).rejects.toBeInstanceOf(NotFoundError);
   });
 });

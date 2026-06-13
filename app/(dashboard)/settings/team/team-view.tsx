@@ -129,7 +129,7 @@ export function TeamView({
               <tbody>
                 {members.map((m) => {
                   const display = m.name?.trim() || m.email;
-                  const isSelf = m.clerkUserId === currentUserId;
+                  const isSelf = m.userId === currentUserId;
                   const isOwner = m.role === Role.OWNER;
                   return (
                     <tr key={m.id} className="border-b border-border/60 last:border-0 hover:bg-muted/30">

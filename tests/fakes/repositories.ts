@@ -42,18 +42,17 @@ export class InMemoryMemberRepository implements IMemberRepository {
   members: MemberRecord[] = [];
   private seq = 0;
 
-  async findFirstByClerkUser(clerkUserId: string): Promise<MemberRecord | null> {
-    return this.members.find((m) => m.clerkUserId === clerkUserId) ?? null;
+  async findFirstByUser(userId: string): Promise<MemberRecord | null> {
+    return this.members.find((m) => m.userId === userId) ?? null;
   }
 
-  async findByClerkUser(
-    clerkUserId: string,
+  async findByUser(
+    userId: string,
     organisationId: string,
   ): Promise<MemberRecord | null> {
     return (
       this.members.find(
-        (m) =>
-          m.clerkUserId === clerkUserId && m.organisationId === organisationId,
+        (m) => m.userId === userId && m.organisationId === organisationId,
       ) ?? null
     );
   }
@@ -65,12 +64,12 @@ export class InMemoryMemberRepository implements IMemberRepository {
   async upsert(input: UpsertMemberInput): Promise<MemberRecord> {
     const existing = this.members.find(
       (m) =>
-        m.clerkUserId === input.clerkUserId &&
+        m.userId === input.userId &&
         m.organisationId === input.organisationId,
     );
     const record: MemberRecord = {
       id: existing?.id ?? `mem_${++this.seq}`,
-      clerkUserId: input.clerkUserId,
+      userId: input.userId,
       organisationId: input.organisationId,
       role: input.role,
       email: input.email,
@@ -98,13 +97,9 @@ export class InMemoryMemberRepository implements IMemberRepository {
     );
   }
 
-  async deleteByClerkUser(
-    clerkUserId: string,
-    organisationId: string,
-  ): Promise<void> {
+  async deleteByUser(userId: string, organisationId: string): Promise<void> {
     this.members = this.members.filter(
-      (m) =>
-        !(m.clerkUserId === clerkUserId && m.organisationId === organisationId),
+      (m) => !(m.userId === userId && m.organisationId === organisationId),
     );
   }
 }

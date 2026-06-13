@@ -31,7 +31,7 @@ describe("OnboardingService.createWorkspace", () => {
     expect(orgs.orgs).toHaveLength(1);
     expect(org).toMatchObject({ name: "Acme", slug: "acme", industry: "SaaS" });
 
-    const member = await members.findFirstByClerkUser("user_1");
+    const member = await members.findFirstByUser("user_1");
     expect(member).toMatchObject({
       organisationId: org.id,
       role: Role.OWNER,

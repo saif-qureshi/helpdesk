@@ -41,7 +41,7 @@ export class OnboardingService {
     });
 
     await this.members.upsert({
-      clerkUserId: input.userId,
+      userId: input.userId,
       organisationId: organisation.id,
       role: Role.OWNER,
       email: input.userEmail,

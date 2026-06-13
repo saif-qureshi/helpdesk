@@ -33,7 +33,7 @@ export interface IOrganisationRepository {
 
 export interface MemberRecord {
   id: string;
-  clerkUserId: string;
+  userId: string;
   organisationId: string;
   role: Role;
   email: string;
@@ -41,7 +41,7 @@ export interface MemberRecord {
 }
 
 export interface UpsertMemberInput {
-  clerkUserId: string;
+  userId: string;
   organisationId: string;
   role: Role;
   email: string;
@@ -50,19 +50,16 @@ export interface UpsertMemberInput {
 
 export interface IMemberRepository {
   /** The user's first membership — the active org until multi-org switching exists. */
-  findFirstByClerkUser(clerkUserId: string): Promise<MemberRecord | null>;
-  findByClerkUser(
-    clerkUserId: string,
+  findFirstByUser(userId: string): Promise<MemberRecord | null>;
+  findByUser(
+    userId: string,
     organisationId: string,
   ): Promise<MemberRecord | null>;
   listByOrganisation(organisationId: string): Promise<MemberRecord[]>;
   upsert(input: UpsertMemberInput): Promise<MemberRecord>;
   updateRole(id: string, organisationId: string, role: Role): Promise<void>;
   deleteById(id: string, organisationId: string): Promise<void>;
-  deleteByClerkUser(
-    clerkUserId: string,
-    organisationId: string,
-  ): Promise<void>;
+  deleteByUser(userId: string, organisationId: string): Promise<void>;
 }
 
 export interface InvitationRecord {

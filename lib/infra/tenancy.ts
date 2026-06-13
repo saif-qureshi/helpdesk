@@ -47,9 +47,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-// A read is scoped if it filters by the org, or by a single user (clerkUserId) —
-// the latter can't leak across tenants (it returns only that user's rows).
-const SCOPE_KEYS = ["organisationId", "clerkUserId"] as const;
+// Scoped by org, or by a single user — the latter can't leak across tenants.
+const SCOPE_KEYS = ["organisationId", "userId"] as const;
 
 function whereHasScope(where: unknown): boolean {
   return (
@@ -83,7 +82,7 @@ export function assertTenantScoped(
 
   if (WHERE_SCOPED_OPS.has(operation) && !whereHasScope(a["where"])) {
     throw new TenancyViolationError(
-      `${model}.${operation} must filter by organisationId or clerkUserId`,
+      `${model}.${operation} must filter by organisationId or userId`,
     );
   }
 

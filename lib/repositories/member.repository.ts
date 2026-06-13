@@ -6,27 +6,23 @@ import type {
   UpsertMemberInput,
 } from "@/lib/core/repositories";
 
-/**
- * Prisma-backed {@link IMemberRepository}. Member is tenant-scoped, so every
- * query passes `organisationId` (also satisfying the tenancy guard).
- */
 export class PrismaMemberRepository implements IMemberRepository {
   constructor(private readonly db: Db) {}
 
-  async findFirstByClerkUser(clerkUserId: string): Promise<MemberRecord | null> {
+  async findFirstByUser(userId: string): Promise<MemberRecord | null> {
     const row = await this.db.member.findFirst({
-      where: { clerkUserId },
+      where: { userId },
       orderBy: { createdAt: "asc" },
     });
     return row && this.toRecord(row);
   }
 
-  async findByClerkUser(
-    clerkUserId: string,
+  async findByUser(
+    userId: string,
     organisationId: string,
   ): Promise<MemberRecord | null> {
     const row = await this.db.member.findFirst({
-      where: { clerkUserId, organisationId },
+      where: { userId, organisationId },
     });
     return row && this.toRecord(row);
   }
@@ -43,13 +39,13 @@ export class PrismaMemberRepository implements IMemberRepository {
     const name = input.name ?? null;
     const row = await this.db.member.upsert({
       where: {
-        clerkUserId_organisationId: {
-          clerkUserId: input.clerkUserId,
+        userId_organisationId: {
+          userId: input.userId,
           organisationId: input.organisationId,
         },
       },
       create: {
-        clerkUserId: input.clerkUserId,
+        userId: input.userId,
         organisationId: input.organisationId,
         role: input.role,
         email: input.email,
@@ -75,16 +71,13 @@ export class PrismaMemberRepository implements IMemberRepository {
     await this.db.member.deleteMany({ where: { id, organisationId } });
   }
 
-  async deleteByClerkUser(
-    clerkUserId: string,
-    organisationId: string,
-  ): Promise<void> {
-    await this.db.member.deleteMany({ where: { clerkUserId, organisationId } });
+  async deleteByUser(userId: string, organisationId: string): Promise<void> {
+    await this.db.member.deleteMany({ where: { userId, organisationId } });
   }
 
   private toRecord(row: {
     id: string;
-    clerkUserId: string;
+    userId: string;
     organisationId: string;
     role: Role;
     email: string;
@@ -92,7 +85,7 @@ export class PrismaMemberRepository implements IMemberRepository {
   }): MemberRecord {
     return {
       id: row.id,
-      clerkUserId: row.clerkUserId,
+      userId: row.userId,
       organisationId: row.organisationId,
       role: row.role,
       email: row.email,

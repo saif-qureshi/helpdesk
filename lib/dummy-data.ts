@@ -156,5 +156,4 @@ export function ticketById(id: number): Ticket | undefined {
   return TICKETS.find((t) => t.id === id);
 }
 
-/** The signed-in agent (mock — replaced by Clerk later). */
 export const CURRENT_AGENT = AGENTS[0]!;

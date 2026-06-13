@@ -22,11 +22,8 @@ const envSchema = z.object({
   // App
   NEXT_PUBLIC_APP_URL: z.string().min(1).default("http://localhost:3000"),
 
-  // Clerk (Phase 1). Optional in the schema so the worker can boot without
-  // them; the app's auth code and Clerk's SDK assert their presence at use.
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1).optional(),
-  CLERK_SECRET_KEY: z.string().min(1).optional(),
-  CLERK_WEBHOOK_SECRET: z.string().min(1).optional(),
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
 
   // Worker liveness key shared between worker (writer) and health check (reader)
   WORKER_HEARTBEAT_KEY: z.string().min(1).default("helpdesk:worker:heartbeat"),

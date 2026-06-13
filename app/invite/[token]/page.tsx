@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { isClerkConfigured } from "@/lib/auth/clerk-config";
 import { invitationService } from "@/lib/container";
+import { getCurrentUser } from "@/lib/auth/session";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -11,27 +10,19 @@ export default async function InvitePage({
 }: {
   params: { token: string };
 }) {
-  if (!isClerkConfigured) {
-    return <InviteError message="Authentication isn't configured yet." />;
-  }
-
-  const { userId } = await auth();
-  if (!userId) {
-    redirect(`/sign-up?redirect_url=${encodeURIComponent(`/invite/${params.token}`)}`);
-  }
-
-  const user = await currentUser();
-  const email = user?.primaryEmailAddress?.emailAddress;
-  if (!email) {
-    return <InviteError message="Your account has no primary email address." />;
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect(
+      `/sign-up?returnTo=${encodeURIComponent(`/invite/${params.token}`)}`,
+    );
   }
 
   let accepted = false;
   try {
     await invitationService.accept({
       token: params.token,
-      clerkUserId: userId,
-      email,
+      userId: user.id,
+      email: user.email,
     });
     accepted = true;
   } catch {

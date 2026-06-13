@@ -1,9 +1,9 @@
 "use client";
 
 import { Bell, Search } from "lucide-react";
-import { UserMenu } from "@/components/layout/user-menu";
+import { UserMenu, type UserMenuUser } from "@/components/layout/user-menu";
 
-export function Topbar() {
+export function Topbar({ user }: { user: UserMenuUser }) {
   return (
     <header className="flex h-14 flex-shrink-0 items-center gap-3 border-b border-border bg-card px-4">
       <label className="relative w-full max-w-sm">
@@ -33,7 +33,7 @@ export function Topbar() {
 
       <div className="h-6 w-px bg-border" />
 
-      <UserMenu />
+      <UserMenu user={user} />
     </header>
   );
 }

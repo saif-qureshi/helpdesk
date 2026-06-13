@@ -37,7 +37,7 @@ describe("assertTenantScoped", () => {
     it("throws when create data omits organisationId", () => {
       expect(() =>
         assertTenantScoped("Member", "create", {
-          data: { clerkUserId: "u_1" },
+          data: { userId: "u_1" },
         }),
       ).toThrow(TenancyViolationError);
     });
@@ -45,7 +45,7 @@ describe("assertTenantScoped", () => {
     it("passes when create data sets organisationId", () => {
       expect(() =>
         assertTenantScoped("Member", "create", {
-          data: { clerkUserId: "u_1", organisationId: "org_1" },
+          data: { userId: "u_1", organisationId: "org_1" },
         }),
       ).not.toThrow();
     });
@@ -53,7 +53,7 @@ describe("assertTenantScoped", () => {
     it("requires organisationId on every createMany row", () => {
       expect(() =>
         assertTenantScoped("Member", "createMany", {
-          data: [{ organisationId: "org_1" }, { clerkUserId: "u_2" }],
+          data: [{ organisationId: "org_1" }, { userId: "u_2" }],
         }),
       ).toThrow(TenancyViolationError);
     });
@@ -64,7 +64,7 @@ describe("assertTenantScoped", () => {
       expect(() =>
         assertTenantScoped("Member", "upsert", {
           where: { id: "m_1" },
-          create: { clerkUserId: "u_1" },
+          create: { userId: "u_1" },
           update: {},
         }),
       ).toThrow(TenancyViolationError);

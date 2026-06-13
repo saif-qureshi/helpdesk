@@ -12,7 +12,7 @@ export class InvitationService {
 
   async accept(input: {
     token: string;
-    clerkUserId: string;
+    userId: string;
     email: string;
   }): Promise<{ organisationId: string }> {
     const invitation = await this.invitations.findByToken(input.token);
@@ -21,7 +21,7 @@ export class InvitationService {
     }
 
     await this.members.upsert({
-      clerkUserId: input.clerkUserId,
+      userId: input.userId,
       organisationId: invitation.organisationId,
       role: invitation.role,
       email: input.email,

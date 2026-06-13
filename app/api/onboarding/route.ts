@@ -1,27 +1,22 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { onboardingService } from "@/lib/container";
-import { UnauthorizedError, ValidationError } from "@/lib/core/errors";
+import { UnauthorizedError } from "@/lib/core/errors";
 import { toHttpError } from "@/lib/http/errors";
+import { getCurrentUser } from "@/lib/auth/session";
 import { onboardingValidator } from "./validator";
 
 export const runtime = "nodejs";
 
-/** POST /api/onboarding — create a workspace for the signed-in user. */
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) throw new UnauthorizedError("Not signed in");
-
-    const user = await currentUser();
-    const email = user?.primaryEmailAddress?.emailAddress;
-    if (!email) throw new ValidationError("Account has no primary email");
+    const user = await getCurrentUser();
+    if (!user) throw new UnauthorizedError("Not signed in");
 
     const body = await onboardingValidator.validate(await req.json());
 
     const organisation = await onboardingService.createWorkspace({
-      userId,
-      userEmail: email,
+      userId: user.id,
+      userEmail: user.email,
       name: body.name,
       slug: body.slug,
       logoUrl: body.logoUrl,
